@@ -1,32 +1,33 @@
 import pandas as pd
 from sklearn.linear_model import LinearRegression
-import gradio as gr
+import streamlit as st
 
-# 1. Data load aur model train karna
-data = pd.read_csv('house_data.csv')
-X = data[['Area_SqFt', 'Rooms']]
-y = data['Price_PKR']
+# 1. Page Title
+st.title("🏡 Smart House Price Prediction System")
+st.write("Area aur Rooms ki tadad darj karein aur foran ghar ki qeemat maloom karein!")
 
-model = LinearRegression()
-model.fit(X, y)
+# 2. Inline Model Training (Data direct read hoga)
+try:
+  data = pd.read_csv("house_data.csv")
+  X = data[["Area_SqFt", "Rooms"]]
+  y = data["Price_PKR"]
 
-# 2. Prediction function
-def predict_price(area, rooms):
-    predicted = model.predict([[area, rooms]])
-    price = int(predicted[0])
-    return f"Estimated House Price: PKR {price:,}"
+  model = LinearRegression()
+  model.fit(X, y)
+  model_ready = True
+except Exception as e:
+  st.error(f"Dataset load karne mein masla hai: {e}")
+  model_ready = False
 
-# 3. Web Interface (UI) banana
-demo = gr.Interface(
-    fn=predict_price,
-    inputs=[
-        gr.Number(label="Ghar ka Area (Square Feet mein)", value=1500),
-        gr.Number(label="Rooms ki Tadad", value=3)
-    ],
-    outputs=gr.Text(label="Qeemat ka Andaza"),
-    title="🏡 Smart House Price Prediction System",
-    description="Area aur Rooms darj karein aur foran ghar ki qeemat maloom karein!"
-)
+# 3. User Inputs
+if model_ready:
+  area = st.number_input(
+      "Ghar ka Area (Square Feet mein):", min_value=100, value=1500, step=50
+  )
+  rooms = st.number_input("Rooms ki Tadad:", min_value=1, value=3, step=1)
 
-if __name__ == "__main__":
-    demo.launch(share=True)
+  # 4. Prediction Button
+  if st.button("Predict Price"):
+    prediction = model.predict([[area, rooms]])
+    price = int(prediction[0])
+    st.success(f"Estimated House Price: PKR {price:,}")
